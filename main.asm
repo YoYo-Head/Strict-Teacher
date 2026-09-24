@@ -5,17 +5,13 @@ extern printf, scanf, rand
 ; for rand, number stored in EAX
 
 section .text
-    ; So basically, I want to do 5 different addition questions.
+    ; So basically, I want to do an addition question.
     ; If its wrong, it prints msg 3
     ; If its right, it prints msg 4
     ; At the start, it prints msg 1
     ; At the end, it prints msg 5
-    ; store values at register edx if needing to print
 
     main:
-        
-
-        ; body code
 
         sub rsp, 40
 
@@ -42,11 +38,27 @@ section .text
         lea rdx, [rel numb] ; sets input
         call scanf
 
-        add r8d, edx
+        mov r10d, [rdx] ; moves input into r10d register
 
-        
+        add r8d, edx ; human answer
 
-        ; break point
+        xor r8d, r10d ; if answer is right, r8d fould have all digits as 0 in 32bits. else, it should have 1s aswell
+
+        cmp r8d, 0 ; if r8d is 0
+        je is_correct
+
+        lea rcx, [rel msg3] ; sets to msg3 if it isn't right
+        call printf
+
+        jmp done
+
+        is_correct:
+            lea rcx, [rel msg4] ; sets print to msg 4
+            call printf
+
+        done:
+            lea rcx, [rel msg5] ; final msg before closing program
+            call printf
 
         add rsp, 40
 
