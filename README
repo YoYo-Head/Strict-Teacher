@@ -1,0 +1,13 @@
+Hey there!
+
+This is pretty basic assembly file (x86-64).
+
+To run this program, you will need to run main.exe
+
+To compile the program, you would need to firstly have nasm and gcc tools installed for x86-64.
+After that, you would need to run the following in terminal, with the directory set to the project folder:
+
+1. nasm -f win64 -g -F cv8 main.asm -o main.obj
+2. gcc -g -m64 main.obj -o main.exe
+
+To run the file in terminal, you can simply run this: .\main.exe
