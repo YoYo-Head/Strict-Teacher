@@ -1,8 +1,10 @@
 bits 64
 
 global main
-extern printf, scanf, rand
+extern printf, scanf, rand, srand, time
 ; for rand, number stored in EAX
+; for time, in RAX
+
 
 section .text
     ; So basically, I want to do an addition question.
@@ -20,45 +22,79 @@ section .text
         call printf
 
         ; question section
+        ; prepares randomisation of seed
+        xor ecx, ecx
+        call time
+        mov ecx, eax
+        call srand ; sets seed as time
 
-        call rand
-        mov r9d, eax ; stores 1st random numb to r9d
+        mov ebx, [rel maxQuestions]
+        mov [rel rightAnswers], 0
 
-        call rand
 
-        mov edx, eax ; stores 2nd random numb to edx, which will then also setup for printing
-        mov r8d, r9d ; sets up the 1st random numb as 2nd %d
-        lea rcx, [rel msg2]
-        call printf
+        loop:
 
-        ; answer and checking
+            ; 1st random
+            call rand
+            xor edx, edx ; clears up up half of register
+            mov ecx, 100 ; divisor of 100
+            div ecx 
+            mov [rel rNum1], edx ; stores 1st random numb to memory
 
-        mov eax, 0
-        lea rcx, [rel format] ; loads format string
-        lea rdx, [rel numb] ; sets input
-        call scanf
+            ; 2nd random
+            call rand
+            xor edx, edx ; clears up up half of register
+            mov ecx, 100 ; divisor of 100
+            div ecx 
+            mov [rel rNum2], edx ; stores 1st random numb to memory
 
-        mov r10d, [rdx] ; moves input into r10d register
+            ; printing question
 
-        add r8d, edx ; human answer
+            lea rcx, [rel msg2]
+            mov edx, [rel rNum1] ; 1st argument
+            mov r8d, [rel rNum2] ; 2nd argument
+            call printf ; prints the question out
 
-        xor r8d, r10d ; if answer is right, r8d fould have all digits as 0 in 32bits. else, it should have 1s aswell
+            ; scanning for question
 
-        cmp r8d, 0 ; if r8d is 0
-        je is_correct
+            lea rcx, [rel format] ; loads format string
+            lea rdx, [rel numb] ; sets input
+            call scanf
 
-        lea rcx, [rel msg3] ; sets to msg3 if it isn't right
-        call printf
+            ; getting actual answer and comparing to user answer
+            mov eax, [rel rNum1] ; puts number 1 in eax register
+            add eax, [rel rNum2] ; adds up number 1 and number 2 to put real answer in register eax
+            xor eax, [rel numb] ; if answer is right, eax fould have all digits as 0. else, it should have 1s aswell
 
-        jmp done
+            cmp eax, 0 ; if r8d is 0
+            je is_correct
 
-        is_correct:
-            lea rcx, [rel msg4] ; sets print to msg 4
+            lea rcx, [rel msg3] ; sets to msg3 if it isn't right
             call printf
 
-        done:
-            lea rcx, [rel msg5] ; final msg before closing program
-            call printf
+            jmp done
+
+            is_correct:
+                lea rcx, [rel msg4] ; sets print to msg 4
+                inc [rel rightAnswers]
+                call printf
+
+            done:
+
+            dec ebx
+
+            cmp ebx, 0
+            jne loop
+
+
+        ; computes final score
+        lea rcx, [rel msg5]
+        mov edx, [rel rightAnswers]
+        mov r8d, [rel maxQuestions]
+        call printf
+
+        lea rcx, [rel msg6] ; final msg before closing program
+        call printf
 
         add rsp, 40
 
@@ -70,10 +106,16 @@ section .data
     msg2: db "What is %d plus %d?: ", 10, 0
     msg3: db "nahhhhh!!!", 10, 0
     msg4: db "hmm, too easy.", 10, 0
-    msg5: db "Come back tmr, or else...", 10, 0
+    msg5: db "You got %d/%d", 10, 0
+    msg6: db "Come back tmr, or else...", 10, 0
+
+    maxQuestions: dd 5
 
     format: db "%d", 0
 
 section .bss
-    numb resb 4
+    rNum1: resd 1
+    rNum2: resd 1
+    numb: resd 1
+    rightAnswers: resd 1
 
